@@ -110,7 +110,7 @@ public class BootstrapActivity extends Activity {
         }
 
         final String launcherClassName = launcher.getClassName();
-        if (!installLauncherOnCreateHook(gameContext.getClassLoader(), launcherClassName,
+        if (!installLauncherOnCreateHook(gameContext.getClassLoader(), launcherClassName, gameContext,
                 (launcherActivity, bundle) -> initializeFusion(launcherActivity, targetPackage))) {
             failAndFinish("Failed to install launcher hook! See log for details.", null);
             return;
@@ -231,6 +231,7 @@ public class BootstrapActivity extends Activity {
 
     private boolean installLauncherOnCreateHook(ClassLoader gameClassLoader,
             String launcherClassName,
+            Context gameContext,
             BeforeOnCreateAction action) {
         if (hookInstalled.get()) {
             return true;
@@ -238,6 +239,32 @@ public class BootstrapActivity extends Activity {
 
         try {
             Class<?> launcherClass = Class.forName(launcherClassName, false, gameClassLoader);
+            Method attachBaseContextMethod = findAttachBaseContextMethod(launcherClass);
+            if (attachBaseContextMethod != null) {
+                attachBaseContextMethod.setAccessible(true);
+                Pine.hook(attachBaseContextMethod, new MethodHook() {
+                    @Override
+                    public void beforeCall(Pine.CallFrame callFrame) {
+                        if (!launcherClass.isInstance(callFrame.thisObject)
+                                || callFrame.args == null
+                                || callFrame.args.length == 0
+                                || !(callFrame.args[0] instanceof Context)) {
+                            return;
+                        }
+
+                        Context baseContext = (Context) callFrame.args[0];
+                        if (baseContext instanceof CustomContextWrapper) {
+                            return;
+                        }
+
+                        callFrame.args[0] = new CustomContextWrapper(gameContext, baseContext, baseContext);
+                        Log.i(TAG, "Wrapped launcher base context for " + launcherClassName);
+                    }
+                });
+            } else {
+                Log.w(TAG, "attachBaseContext(Context) not found for " + launcherClassName);
+            }
+
             Method onCreateMethod = Utilities.findOnCreateMethod(launcherClass);
             onCreateMethod.setAccessible(true);
 
@@ -269,6 +296,19 @@ public class BootstrapActivity extends Activity {
             Log.e(TAG, "Failed to install launcher onCreate hook for " + launcherClassName, e);
             return false;
         }
+    }
+
+    private static Method findAttachBaseContextMethod(Class<?> clazz) {
+        Class<?> current = clazz;
+        while (current != null) {
+            try {
+                return current.getDeclaredMethod("attachBaseContext", Context.class);
+            } catch (NoSuchMethodException ignored) {
+                current = current.getSuperclass();
+            }
+        }
+
+        return null;
     }
 
     private void initializeFusion(Activity launcherActivity, String targetPackage) {

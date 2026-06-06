@@ -4,7 +4,6 @@ import android.content.Context;
 import android.content.ContextWrapper;
 import android.content.SharedPreferences;
 import android.os.Build;
-import android.util.Log;
 import android.view.Display;
 
 
@@ -14,16 +13,14 @@ import java.io.File;
 
 public class CustomContextWrapper extends ContextWrapper {
     Context fusionContext;
-    Context appContext;
 
     public CustomContextWrapper(Context gameContext, Context fusionContext, Context appContext) {
         super(gameContext);
         this.fusionContext = fusionContext;
-        this.getApplicationInfo().dataDir = appContext.getApplicationInfo().dataDir;
+        this.getApplicationInfo().dataDir = fusionContext.getApplicationInfo().dataDir;
         // this prevents the game from resolving its own libraries
         // that way we can override them properly with our own versions
         this.getApplicationInfo().nativeLibraryDir = "";
-        this.appContext = appContext != fusionContext ? new CustomContextWrapper(this, appContext, appContext) : fusionContext;
     }
 
 //    @Override
@@ -63,18 +60,18 @@ public class CustomContextWrapper extends ContextWrapper {
     @Nullable
     @Override
     public File getExternalCacheDir() {
-        return this.fusionContext.getExternalCacheDir();
+        return super.getExternalCacheDir();
     }
 
 
     @Override
     public File[] getExternalCacheDirs() {
-        return this.fusionContext.getExternalCacheDirs();
+        return super.getExternalCacheDirs();
     }
 
     @Override
     public File getExternalFilesDir(String type) {
-        return this.fusionContext.getExternalFilesDir(type);
+        return super.getExternalFilesDir(type);
     }
 
     @Override
@@ -97,18 +94,16 @@ public class CustomContextWrapper extends ContextWrapper {
 
     @Override
     public Context getApplicationContext() {
-        return appContext;
+        return this;
     }
 
     @Override
     public File getObbDir() {
-        Log.i("f", "2");
-        return null;
-//        return this.appContext.getObbDir();
+        return super.getObbDir();
     }
 
     @Override
     public File[] getObbDirs() {
-        return this.fusionContext.getObbDirs();
+        return super.getObbDirs();
     }
 }
