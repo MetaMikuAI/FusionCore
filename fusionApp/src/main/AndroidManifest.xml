@@ -22,6 +22,7 @@
     <package android:name="com.abstractsoft.mashypets" />-->
     <package android:name="com.StefMorojna.SpaceflightSimulator" />
     <package android:name="com.DanVogt.DATAWING" />
+    <package android:name="com.meta.pjsekai" />
   </queries>
   <application android:label="@string/app_name" android:icon="@mipmap/app_icon" android:enableOnBackInvokedCallback="true" android:extractNativeLibs="true">
     <meta-data android:name="unity.splash-mode" android:value="0" />
