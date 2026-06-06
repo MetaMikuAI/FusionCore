@@ -257,7 +257,7 @@ public class BootstrapActivity extends Activity {
                             return;
                         }
 
-                        callFrame.args[0] = new CustomContextWrapper(gameContext, baseContext, baseContext);
+                        callFrame.args[0] = new CustomContextWrapper(gameContext, baseContext);
                         Log.i(TAG, "Wrapped launcher base context for " + launcherClassName);
                     }
                 });

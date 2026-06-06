@@ -88,7 +88,6 @@ public class UnityPlayerHooks {
                                 + callFrame.args[0].getClass().getName());
                         activity = (Activity) callFrame.args[0];
                         loadingOverlay = showLoadingOverlay(activity, "Injecting Fusion hooks...");
-                        callFrame.args[0] = new CustomContextWrapper(gameContext, activity, activity);
                     } catch (Exception e) {
                         Log.i(TAG, "Failed to wrap context!", e);
                     }
